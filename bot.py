@@ -9,8 +9,8 @@ from store import get_access_token, fetch_products
 _database = None
 
 def start(update, context):
-    db = context.bot_data["db"]
-    access_token = db.get('access_token').decode("utf-8")
+    db = context.bot_data['db']
+    access_token = db.get('access_token').decode('utf-8')
     products = fetch_products(access_token)
     keyboard = [
         [InlineKeyboardButton(product['name'], callback_data=product['id'])]
@@ -18,14 +18,14 @@ def start(update, context):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose:', reply_markup=reply_markup)
-    return "ECHO"
+    return 'ECHO'
 
 
 def echo(update, context):
     query = update.callback_query
     users_reply = update.message.text
     update.message.reply_text(query)
-    return "ECHO"
+    return 'ECHO'
 
 
 def handle_users_reply(update, context):
@@ -68,9 +68,9 @@ if __name__ == '__main__':
     client_id = env.str('EP_CLIENT_ID')
     client_secret = env.str('EP_CLIENT_SECRET')
     telegram_token = env.str('TELEGRAM_TOKEN')
-    database_password = env.str("DATABASE_PASSWORD")
-    database_host = env.str("DATABASE_HOST")
-    database_port = env.int("DATABASE_PORT")
+    database_password = env.str('DATABASE_PASSWORD')
+    database_host = env.str('DATABASE_HOST')
+    database_port = env.int('DATABASE_PORT')
     db = redis.Redis(
         host=database_host,
         port=database_port,
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
     updater = Updater(telegram_token)
     dispatcher = updater.dispatcher
-    dispatcher.bot_data["db"] = db
+    dispatcher.bot_data['db'] = db
     dispatcher.add_handler(CallbackQueryHandler(handle_users_reply))
     dispatcher.add_handler(MessageHandler(Filters.text, handle_users_reply))
     dispatcher.add_handler(CommandHandler('start', handle_users_reply))
