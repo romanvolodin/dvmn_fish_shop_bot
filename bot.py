@@ -6,7 +6,6 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler
 
 from store import get_access_token, fetch_products, fetch_product
 
-_database = None
 
 def start(update, context):
     db = context.bot_data['db']
@@ -38,13 +37,6 @@ def handle_menu(update, context):
     return 'HANDLE_MENU'
 
 
-def echo(update, context):
-    query = update.callback_query
-    users_reply = update.message.text
-    update.message.reply_text(query)
-    return 'ECHO'
-
-
 def handle_users_reply(update, context):
     db = context.bot_data['db']
     if update.message:
@@ -70,12 +62,6 @@ def handle_users_reply(update, context):
         db.set(chat_id, next_state)
     except Exception as err:
         print(err)
-
-def get_database_connection():
-    global _database
-    if _database is None:
-        _database = {}
-    return _database
 
 
 if __name__ == '__main__':
