@@ -30,9 +30,14 @@ def handle_menu(update, context):
     callback = update.callback_query.data
     product_id = callback
     product = fetch_product(product_id, token)
+    name = product['name']
+    price = product['meta']['display_price']['with_tax']['formatted']
+    stock = product['meta']['stock']['level']
+    description = product['description']
+    text = f'{name}\n\n{price} per kg\n{stock} kg on stock\n\n{description}'
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=product
+        text=text,
     )
     return 'HANDLE_MENU'
 
