@@ -26,6 +26,15 @@ def fetch_products(access_token):
     return response.json()['data']
 
 
+def fetch_product(product_id, access_token):
+    response = requests.get(
+        f'{API_BASE_URL}/v2/products/{product_id}',
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+    response.raise_for_status()
+    return response.json()['data']
+
+
 if __name__ == '__main__':
     env = Env()
     env.read_env()

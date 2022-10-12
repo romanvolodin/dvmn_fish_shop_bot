@@ -4,7 +4,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Filters, Updater
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler
 
-from store import get_access_token, fetch_products
+from store import get_access_token, fetch_products, fetch_product
 
 _database = None
 
@@ -18,7 +18,24 @@ def start(update, context):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose:', reply_markup=reply_markup)
-    return 'ECHO'
+    return 'HANDLE_MENU'
+
+
+def handle_menu(update, context):
+    db = context.bot_data['db']
+    token = db.get('access_token').decode("utf-8")
+    context.bot.delete_message(
+        chat_id=update.effective_chat.id,
+        message_id=update.callback_query.message.message_id,
+    )
+    callback = update.callback_query.data
+    product_id = callback
+    product = fetch_product(product_id, token)
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=product
+    )
+    return 'HANDLE_MENU'
 
 
 def echo(update, context):
@@ -29,7 +46,7 @@ def echo(update, context):
 
 
 def handle_users_reply(update, context):
-    db = get_database_connection()
+    db = context.bot_data['db']
     if update.message:
         user_reply = update.message.text
         chat_id = update.message.chat_id
@@ -41,16 +58,16 @@ def handle_users_reply(update, context):
     if user_reply == '/start':
         user_state = 'START'
     else:
-        user_state = db.get(chat_id)
+        user_state = db.get(chat_id).decode("utf-8")
     
     states_functions = {
         'START': start,
-        'ECHO': echo
+        'HANDLE_MENU': handle_menu,
     }
     state_handler = states_functions[user_state]
     try:
         next_state = state_handler(update, context)
-        db[chat_id] = next_state
+        db.set(chat_id, next_state)
     except Exception as err:
         print(err)
 
