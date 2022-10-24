@@ -35,8 +35,36 @@ def fetch_product(product_id, access_token):
     return response.json()['data']
 
 
+def fetch_cart(access_token, cart_id):
+    response = requests.get(
+        f'{API_BASE_URL}/v2/carts/{cart_id}/items',
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+    response.raise_for_status()
+    return response.json()['data']
+
+
+def add_product_to_cart(access_token, product_id, cart_id):
+    response = requests.post(
+        f'{API_BASE_URL}/v2/carts/{cart_id}/items',
+        headers={
+            'Authorization': f'Bearer {access_token}',
+        },
+        json={
+            'data': {
+                'type': 'cart_item',
+                'sku': 'shark-123',
+                'quantity': 12,
+            }
+        }
+    )
+    response.raise_for_status()
+    return response.json()
+
+
 if __name__ == '__main__':
     env = Env()
     env.read_env()
     access_token = get_access_token(env.str('EP_CLIENT_ID'), env.str('EP_CLIENT_SECRET'))
-    print(fetch_products(access_token))
+    print(add_product_to_cart(access_token, None, 'carttt'))
+    print(fetch_cart(access_token, 'carttt'))
