@@ -19,7 +19,7 @@ def get_access_token(client_id, client_secret):
 
 def fetch_products(access_token):
     response = requests.get(
-        f'{API_BASE_URL}/v2/products',
+        f'{API_BASE_URL}/pcm/products',
         headers={'Authorization': f'Bearer {access_token}'}
     )
     response.raise_for_status()
@@ -28,7 +28,7 @@ def fetch_products(access_token):
 
 def fetch_product(product_id, access_token):
     response = requests.get(
-        f'{API_BASE_URL}/v2/products/{product_id}',
+        f'{API_BASE_URL}/pcm/products/{product_id}',
         headers={'Authorization': f'Bearer {access_token}'}
     )
     response.raise_for_status()
