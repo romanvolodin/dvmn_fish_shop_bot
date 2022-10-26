@@ -1,5 +1,4 @@
 import os
-from urllib.parse import urlparse, unquote
 
 import requests
 from environs import Env

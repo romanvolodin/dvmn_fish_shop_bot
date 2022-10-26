@@ -1,10 +1,11 @@
-from environs import Env
 import redis
+from environs import Env
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Filters, Updater
-from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler
+from telegram.ext import (CallbackQueryHandler, CommandHandler, Filters,
+                          MessageHandler, Updater)
 
-from store import get_access_token, fetch_products, fetch_product, fetch_product_price, fetch_product_stock, download_product_image
+from store import (download_product_image, fetch_product, fetch_product_price,
+                   fetch_product_stock, fetch_products, get_access_token)
 
 
 def start(update, context):
