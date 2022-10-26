@@ -1,3 +1,6 @@
+import os
+from urllib.parse import urlparse, unquote
+
 import requests
 from environs import Env
 
@@ -69,6 +72,23 @@ def fetch_product_stock(product_id, access_token):
     )
     response.raise_for_status()
     return response.json()['data']
+
+
+def download_product_image(image_id, access_token):
+    response = requests.get(
+        f'{API_BASE_URL}/v2/files/{image_id}',
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+    response.raise_for_status()
+    decoded_response = response.json()['data']
+    image_url = decoded_response['link']['href']
+    image_name = decoded_response['file_name']
+
+    response = requests.get(image_url)
+    response.raise_for_status()
+    with open(image_name, 'wb') as file:
+        file.write(response.content)
+    return image_name
 
 
 def fetch_cart(access_token, cart_id):

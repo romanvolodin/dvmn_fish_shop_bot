@@ -4,7 +4,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Filters, Updater
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler
 
-from store import get_access_token, fetch_products, fetch_product, fetch_product_price, fetch_product_stock
+from store import get_access_token, fetch_products, fetch_product, fetch_product_price, fetch_product_stock, download_product_image
 
 
 def start(update, context):
@@ -33,7 +33,9 @@ def handle_menu(update, context):
     product = fetch_product(product_id, token)
     product_price = fetch_product_price(price_book_id, product['attributes']['sku'], token)
     product_stock = fetch_product_stock(product_id, token)
-
+    product_image = download_product_image(
+        product['relationships']['main_image']['data']['id'], access_token
+    )
     name = product['attributes']['name']
     price = product_price['attributes']['currencies']['USD']['amount']
     formated_price = "${:.2f}".format(price / 100)
@@ -41,10 +43,12 @@ def handle_menu(update, context):
     description = product['attributes']['description']
     text = f'{name}\n\n{formated_price} per kg\n{stock} kg on stock\n\n{description}'
 
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=text,
-    )
+    with open(product_image, 'rb') as photo:
+        context.bot.send_photo(
+            chat_id=update.effective_chat.id,
+            photo=photo,
+            caption=text,
+        )
     return 'HANDLE_MENU'
 
 
