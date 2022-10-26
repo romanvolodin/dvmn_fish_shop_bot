@@ -52,7 +52,30 @@ def handle_menu(update, context):
             caption=text,
             reply_markup=reply_markup,
         )
-    return 'HANDLE_MENU'
+    return 'HANDLE_DESCRIPTION'
+
+
+def handle_description(update, context):
+    db = context.bot_data['db']
+    token = db.get('access_token').decode("utf-8")
+    callback = update.callback_query.data
+    if callback == 'go_back':
+        context.bot.delete_message(
+            chat_id=update.effective_chat.id,
+            message_id=update.callback_query.message.message_id,
+        )
+        products = fetch_products(token)
+        keyboard = [
+            [InlineKeyboardButton(product['attributes']['name'], callback_data=product['id'])]
+            for product in products
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text='Выберите товар:',
+            reply_markup=reply_markup
+        )
+        return 'HANDLE_MENU'
 
 
 def handle_users_reply(update, context):
@@ -67,15 +90,13 @@ def handle_users_reply(update, context):
         return
     if user_reply == '/start':
         user_state = 'START'
-    elif user_reply == 'go_back':
-        user_state = 'HANDLE_DESCRIPTION'
     else:
         user_state = db.get(chat_id).decode("utf-8")
     
     states_functions = {
         'START': start,
         'HANDLE_MENU': handle_menu,
-        'HANDLE_DESCRIPTION': handle_menu,
+        'HANDLE_DESCRIPTION': handle_description,
     }
     state_handler = states_functions[user_state]
     try:
