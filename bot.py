@@ -5,8 +5,8 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler, Filters,
                           MessageHandler, Updater)
 
 from store import (add_product_to_cart, download_product_image, fetch_cart,
-                   fetch_product, fetch_product_price, fetch_product_stock,
-                   fetch_products, get_access_token)
+                   fetch_cart_items, fetch_product, fetch_product_price,
+                   fetch_product_stock, fetch_products, get_access_token)
 
 
 def start(update, context):
@@ -71,7 +71,22 @@ def handle_description(update, context):
     callback = update.callback_query.data
     if callback == 'cart':
         cart_id = update.effective_chat.id
-        print(fetch_cart(token, cart_id))
+        cart = fetch_cart(token, cart_id)
+        cart_items = fetch_cart_items(token, cart_id)
+        text = [
+            f"""{product['name']}
+            {product['description']}
+            {product['meta']['display_price']['with_tax']['unit']['formatted']} per kg
+            {product['quantity']}kg in cart for {product['meta']['display_price']['with_tax']['value']['formatted']}\n\n"""
+            for product in cart_items
+        ]
+        text.append(f"Total: {cart['meta']['display_price']['with_tax']['formatted']}")
+
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="".join(text),
+        )
+        return "HANDLE_DESCRIPTION"
     elif callback != 'go_back':
         product_id, quantity = callback.split('~')
         product = fetch_product(product_id, token)

@@ -93,6 +93,15 @@ def download_product_image(image_id, access_token):
 
 def fetch_cart(access_token, cart_id):
     response = requests.get(
+        f'{API_BASE_URL}/v2/carts/{cart_id}',
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+    response.raise_for_status()
+    return response.json()['data']
+
+
+def fetch_cart_items(access_token, cart_id):
+    response = requests.get(
         f'{API_BASE_URL}/v2/carts/{cart_id}/items',
         headers={'Authorization': f'Bearer {access_token}'}
     )
