@@ -35,6 +35,42 @@ def fetch_product(product_id, access_token):
     return response.json()['data']
 
 
+def fetch_price_book_prices(price_book_id, access_token):
+    response = requests.get(
+        f'{API_BASE_URL}/pcm/pricebooks/{price_book_id}/prices/',
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+    response.raise_for_status()
+    return response.json()['data']
+
+
+def fetch_product_price(price_book_id, product_sku, access_token):
+    prices = fetch_price_book_prices(price_book_id, access_token)
+    price_id = None
+    for price in prices:
+        if price['attributes']['sku'] == product_sku:
+            price_id = price['id']
+
+    if price_id is None:
+        return
+
+    response = requests.get(
+        f'{API_BASE_URL}/pcm/pricebooks/{price_book_id}/prices/{price_id}',
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+    response.raise_for_status()
+    return response.json()['data']
+
+
+def fetch_product_stock(product_id, access_token):
+    response = requests.get(
+        f'{API_BASE_URL}/v2/inventories/{product_id}',
+        headers={'Authorization': f'Bearer {access_token}'}
+    )
+    response.raise_for_status()
+    return response.json()['data']
+
+
 def fetch_cart(access_token, cart_id):
     response = requests.get(
         f'{API_BASE_URL}/v2/carts/{cart_id}/items',

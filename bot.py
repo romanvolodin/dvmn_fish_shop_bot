@@ -4,7 +4,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Filters, Updater
 from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler
 
-from store import get_access_token, fetch_products, fetch_product
+from store import get_access_token, fetch_products, fetch_product, fetch_product_price, fetch_product_stock
 
 
 def start(update, context):
@@ -12,7 +12,7 @@ def start(update, context):
     access_token = db.get('access_token').decode('utf-8')
     products = fetch_products(access_token)
     keyboard = [
-        [InlineKeyboardButton(product['name'], callback_data=product['id'])]
+        [InlineKeyboardButton(product['attributes']['name'], callback_data=product['id'])]
         for product in products
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -23,6 +23,7 @@ def start(update, context):
 def handle_menu(update, context):
     db = context.bot_data['db']
     token = db.get('access_token').decode("utf-8")
+    price_book_id = db.get('price_book_id').decode("utf-8")
     context.bot.delete_message(
         chat_id=update.effective_chat.id,
         message_id=update.callback_query.message.message_id,
@@ -30,11 +31,16 @@ def handle_menu(update, context):
     callback = update.callback_query.data
     product_id = callback
     product = fetch_product(product_id, token)
-    name = product['name']
-    price = product['meta']['display_price']['with_tax']['formatted']
-    stock = product['meta']['stock']['level']
-    description = product['description']
-    text = f'{name}\n\n{price} per kg\n{stock} kg on stock\n\n{description}'
+    product_price = fetch_product_price(price_book_id, product['attributes']['sku'], token)
+    product_stock = fetch_product_stock(product_id, token)
+
+    name = product['attributes']['name']
+    price = product_price['attributes']['currencies']['USD']['amount']
+    formated_price = "${:.2f}".format(price / 100)
+    stock = product_stock['available']
+    description = product['attributes']['description']
+    text = f'{name}\n\n{formated_price} per kg\n{stock} kg on stock\n\n{description}'
+
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=text,
@@ -75,6 +81,7 @@ if __name__ == '__main__':
 
     client_id = env.str('EP_CLIENT_ID')
     client_secret = env.str('EP_CLIENT_SECRET')
+    price_book_id = env.str('EP_PRICEBOOK_ID')
     telegram_token = env.str('TELEGRAM_TOKEN')
     database_password = env.str('DATABASE_PASSWORD')
     database_host = env.str('DATABASE_HOST')
@@ -87,6 +94,7 @@ if __name__ == '__main__':
     access_token = get_access_token(client_id, client_secret)
     
     db.set('access_token', access_token)
+    db.set('price_book_id', price_book_id)
 
     updater = Updater(telegram_token)
     dispatcher = updater.dispatcher
