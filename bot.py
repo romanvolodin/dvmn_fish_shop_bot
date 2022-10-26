@@ -4,8 +4,9 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (CallbackQueryHandler, CommandHandler, Filters,
                           MessageHandler, Updater)
 
-from store import (download_product_image, fetch_product, fetch_product_price,
-                   fetch_product_stock, fetch_products, get_access_token)
+from store import (add_product_to_cart, download_product_image, fetch_cart,
+                   fetch_product, fetch_product_price, fetch_product_stock,
+                   fetch_products, get_access_token)
 
 
 def start(update, context):
@@ -44,7 +45,15 @@ def handle_menu(update, context):
     description = product['attributes']['description']
     text = f'{name}\n\n{formated_price} per kg\n{stock} kg on stock\n\n{description}'
 
-    reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("Назад", callback_data="go_back")]])
+    reply_markup = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton('1 кг', callback_data=f'{product_id}~1'),
+            InlineKeyboardButton('5 кг', callback_data=f'{product_id}~5'),
+            InlineKeyboardButton('10 кг', callback_data=f'{product_id}~10'),
+        ],
+        [InlineKeyboardButton('Корзина', callback_data='cart')],
+        [InlineKeyboardButton('Назад', callback_data='go_back')],
+    ])
 
     with open(product_image, 'rb') as photo:
         context.bot.send_photo(
@@ -60,7 +69,21 @@ def handle_description(update, context):
     db = context.bot_data['db']
     token = db.get('access_token').decode("utf-8")
     callback = update.callback_query.data
-    if callback == 'go_back':
+    if callback == 'cart':
+        cart_id = update.effective_chat.id
+        print(fetch_cart(token, cart_id))
+    elif callback != 'go_back':
+        product_id, quantity = callback.split('~')
+        product = fetch_product(product_id, token)
+        cart_id = update.effective_chat.id
+        add_product_to_cart(
+            token,
+            product['attributes']['sku'],
+            int(quantity),
+            cart_id
+        )
+        return "HANDLE_DESCRIPTION"
+    else:
         context.bot.delete_message(
             chat_id=update.effective_chat.id,
             message_id=update.callback_query.message.message_id,

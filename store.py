@@ -100,7 +100,7 @@ def fetch_cart(access_token, cart_id):
     return response.json()['data']
 
 
-def add_product_to_cart(access_token, product_id, cart_id):
+def add_product_to_cart(access_token, product_sku, quantity, cart_id):
     response = requests.post(
         f'{API_BASE_URL}/v2/carts/{cart_id}/items',
         headers={
@@ -109,8 +109,8 @@ def add_product_to_cart(access_token, product_id, cart_id):
         json={
             'data': {
                 'type': 'cart_item',
-                'sku': 'shark-123',
-                'quantity': 12,
+                'sku': product_sku,
+                'quantity': quantity,
             }
         }
     )
