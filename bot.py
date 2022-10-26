@@ -43,11 +43,14 @@ def handle_menu(update, context):
     description = product['attributes']['description']
     text = f'{name}\n\n{formated_price} per kg\n{stock} kg on stock\n\n{description}'
 
+    reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("Назад", callback_data="go_back")]])
+
     with open(product_image, 'rb') as photo:
         context.bot.send_photo(
             chat_id=update.effective_chat.id,
             photo=photo,
             caption=text,
+            reply_markup=reply_markup,
         )
     return 'HANDLE_MENU'
 
@@ -64,12 +67,15 @@ def handle_users_reply(update, context):
         return
     if user_reply == '/start':
         user_state = 'START'
+    elif user_reply == 'go_back':
+        user_state = 'HANDLE_DESCRIPTION'
     else:
         user_state = db.get(chat_id).decode("utf-8")
     
     states_functions = {
         'START': start,
         'HANDLE_MENU': handle_menu,
+        'HANDLE_DESCRIPTION': handle_menu,
     }
     state_handler = states_functions[user_state]
     try:
