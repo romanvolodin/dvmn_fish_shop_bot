@@ -83,12 +83,13 @@ def download_product_image(image_id, access_token):
     decoded_response = response.json()['data']
     image_url = decoded_response['link']['href']
     image_name = decoded_response['file_name']
+    image_path = os.path.join('tmp', image_name)
 
     response = requests.get(image_url)
     response.raise_for_status()
-    with open(image_name, 'wb') as file:
+    with open(image_path, 'wb') as file:
         file.write(response.content)
-    return image_name
+    return image_path
 
 
 def fetch_cart(access_token, cart_id):
