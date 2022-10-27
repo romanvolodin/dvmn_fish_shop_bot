@@ -6,7 +6,8 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler, Filters,
 
 from store import (add_product_to_cart, download_product_image, fetch_cart,
                    fetch_cart_items, fetch_product, fetch_product_price,
-                   fetch_product_stock, fetch_products, get_access_token)
+                   fetch_product_stock, fetch_products, get_access_token,
+                   remove_product_to_cart)
 
 
 def start(update, context):
@@ -82,11 +83,19 @@ def handle_description(update, context):
         ]
         text.append(f"Total: {cart['meta']['display_price']['with_tax']['formatted']}")
 
+        keyboard = [
+            [InlineKeyboardButton(f"Удалить {product['name']}", callback_data=product['id'])]
+            for product in cart_items
+        ]
+        keyboard.append([InlineKeyboardButton("В меню", callback_data='go_back')])
+
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="".join(text),
+            reply_markup=InlineKeyboardMarkup(keyboard),
         )
-        return "HANDLE_DESCRIPTION"
+        return "HANDLE_CART"
+
     elif callback != 'go_back':
         product_id, quantity = callback.split('~')
         product = fetch_product(product_id, token)
@@ -117,6 +126,40 @@ def handle_description(update, context):
         return 'HANDLE_MENU'
 
 
+def handle_cart(update, context):
+    db = context.bot_data['db']
+    token = db.get('access_token').decode("utf-8")
+    callback = update.callback_query.data
+
+    if callback == 'go_back':
+        context.bot.delete_message(
+            chat_id=update.effective_chat.id,
+            message_id=update.callback_query.message.message_id,
+        )
+        products = fetch_products(token)
+        keyboard = [
+            [InlineKeyboardButton(product['attributes']['name'], callback_data=product['id'])]
+            for product in products
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text='Выберите товар:',
+            reply_markup=reply_markup
+        )
+        return 'HANDLE_MENU'
+
+    else:
+        context.bot.delete_message(
+            chat_id=update.effective_chat.id,
+            message_id=update.callback_query.message.message_id,
+        )
+        cart_id = update.effective_chat.id
+        remove_product_to_cart(token, cart_id, callback)
+        return 'HANDLE_CART'
+
+
+
 def handle_users_reply(update, context):
     db = context.bot_data['db']
     if update.message:
@@ -136,6 +179,7 @@ def handle_users_reply(update, context):
         'START': start,
         'HANDLE_MENU': handle_menu,
         'HANDLE_DESCRIPTION': handle_description,
+        'HANDLE_CART': handle_cart,
     }
     state_handler = states_functions[user_state]
     try:

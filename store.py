@@ -127,6 +127,17 @@ def add_product_to_cart(access_token, product_sku, quantity, cart_id):
     return response.json()
 
 
+def remove_product_to_cart(access_token, cart_id, product_id):
+    response = requests.delete(
+        f'{API_BASE_URL}/v2/carts/{cart_id}/items/{product_id}',
+        headers={
+            'Authorization': f'Bearer {access_token}',
+        },
+    )
+    response.raise_for_status()
+    return response.json()
+
+
 if __name__ == '__main__':
     env = Env()
     env.read_env()
