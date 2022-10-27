@@ -3,125 +3,123 @@ import os
 import requests
 from environs import Env
 
+API_BASE_URL = "https://api.moltin.com"
 
-API_BASE_URL = 'https://api.moltin.com'
 
 def get_access_token(client_id, client_secret):
     payload = {
-        'client_id': client_id,
-        'client_secret': client_secret,
-        'grant_type': 'client_credentials',
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "grant_type": "client_credentials",
     }
-    response = requests.post(
-        f'{API_BASE_URL}/oauth/access_token', data=payload
-    )
+    response = requests.post(f"{API_BASE_URL}/oauth/access_token", data=payload)
     response.raise_for_status()
-    return response.json()['access_token']
+    return response.json()["access_token"]
 
 
 def fetch_products(access_token):
     response = requests.get(
-        f'{API_BASE_URL}/pcm/products',
-        headers={'Authorization': f'Bearer {access_token}'}
+        f"{API_BASE_URL}/pcm/products",
+        headers={"Authorization": f"Bearer {access_token}"},
     )
     response.raise_for_status()
-    return response.json()['data']
+    return response.json()["data"]
 
 
 def fetch_product(product_id, access_token):
     response = requests.get(
-        f'{API_BASE_URL}/pcm/products/{product_id}',
-        headers={'Authorization': f'Bearer {access_token}'}
+        f"{API_BASE_URL}/pcm/products/{product_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
     )
     response.raise_for_status()
-    return response.json()['data']
+    return response.json()["data"]
 
 
 def fetch_price_book_prices(price_book_id, access_token):
     response = requests.get(
-        f'{API_BASE_URL}/pcm/pricebooks/{price_book_id}/prices/',
-        headers={'Authorization': f'Bearer {access_token}'}
+        f"{API_BASE_URL}/pcm/pricebooks/{price_book_id}/prices/",
+        headers={"Authorization": f"Bearer {access_token}"},
     )
     response.raise_for_status()
-    return response.json()['data']
+    return response.json()["data"]
 
 
 def fetch_product_price(price_book_id, product_sku, access_token):
     prices = fetch_price_book_prices(price_book_id, access_token)
     price_id = None
     for price in prices:
-        if price['attributes']['sku'] == product_sku:
-            price_id = price['id']
+        if price["attributes"]["sku"] == product_sku:
+            price_id = price["id"]
 
     if price_id is None:
         return
 
     response = requests.get(
-        f'{API_BASE_URL}/pcm/pricebooks/{price_book_id}/prices/{price_id}',
-        headers={'Authorization': f'Bearer {access_token}'}
+        f"{API_BASE_URL}/pcm/pricebooks/{price_book_id}/prices/{price_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
     )
     response.raise_for_status()
-    return response.json()['data']
+    return response.json()["data"]
 
 
 def fetch_product_stock(product_id, access_token):
     response = requests.get(
-        f'{API_BASE_URL}/v2/inventories/{product_id}',
-        headers={'Authorization': f'Bearer {access_token}'}
+        f"{API_BASE_URL}/v2/inventories/{product_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
     )
     response.raise_for_status()
-    return response.json()['data']
+    return response.json()["data"]
 
 
 def download_product_image(image_id, access_token):
     response = requests.get(
-        f'{API_BASE_URL}/v2/files/{image_id}',
-        headers={'Authorization': f'Bearer {access_token}'}
+        f"{API_BASE_URL}/v2/files/{image_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
     )
     response.raise_for_status()
-    decoded_response = response.json()['data']
-    image_url = decoded_response['link']['href']
-    image_name = decoded_response['file_name']
-    image_path = os.path.join('tmp', image_name)
+    decoded_response = response.json()["data"]
+    image_url = decoded_response["link"]["href"]
+    image_name = decoded_response["file_name"]
+    image_path = os.path.join("tmp", image_name)
 
     response = requests.get(image_url)
     response.raise_for_status()
-    with open(image_path, 'wb') as file:
+    with open(image_path, "wb") as file:
         file.write(response.content)
     return image_path
 
 
 def fetch_cart(access_token, cart_id):
     response = requests.get(
-        f'{API_BASE_URL}/v2/carts/{cart_id}',
-        headers={'Authorization': f'Bearer {access_token}'}
+        f"{API_BASE_URL}/v2/carts/{cart_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
     )
     response.raise_for_status()
-    return response.json()['data']
+    return response.json()["data"]
 
 
 def fetch_cart_items(access_token, cart_id):
     response = requests.get(
-        f'{API_BASE_URL}/v2/carts/{cart_id}/items',
-        headers={'Authorization': f'Bearer {access_token}'}
+        f"{API_BASE_URL}/v2/carts/{cart_id}/items",
+        headers={"Authorization": f"Bearer {access_token}"},
     )
     response.raise_for_status()
-    return response.json()['data']
+    return response.json()["data"]
 
 
 def add_product_to_cart(access_token, product_sku, quantity, cart_id):
     response = requests.post(
-        f'{API_BASE_URL}/v2/carts/{cart_id}/items',
+        f"{API_BASE_URL}/v2/carts/{cart_id}/items",
         headers={
-            'Authorization': f'Bearer {access_token}',
+            "Authorization": f"Bearer {access_token}",
         },
         json={
-            'data': {
-                'type': 'cart_item',
-                'sku': product_sku,
-                'quantity': quantity,
+            "data": {
+                "type": "cart_item",
+                "sku": product_sku,
+                "quantity": quantity,
             }
-        }
+        },
     )
     response.raise_for_status()
     return response.json()
@@ -129,10 +127,8 @@ def add_product_to_cart(access_token, product_sku, quantity, cart_id):
 
 def remove_product_to_cart(access_token, cart_id, product_id):
     response = requests.delete(
-        f'{API_BASE_URL}/v2/carts/{cart_id}/items/{product_id}',
-        headers={
-            'Authorization': f'Bearer {access_token}',
-        },
+        f"{API_BASE_URL}/v2/carts/{cart_id}/items/{product_id}",
+        headers={"Authorization": f"Bearer {access_token}"},
     )
     response.raise_for_status()
     return response.json()
@@ -140,24 +136,24 @@ def remove_product_to_cart(access_token, cart_id, product_id):
 
 def create_customer(email, access_token):
     response = requests.post(
-        f'{API_BASE_URL}/v2/customers',
-        headers={
-            'Authorization': f'Bearer {access_token}',
-        },
+        f"{API_BASE_URL}/v2/customers",
+        headers={"Authorization": f"Bearer {access_token}"},
         json={
-            'data': {
-                'type': 'customer',
-                'name': email,
-                'email': email,
+            "data": {
+                "type": "customer",
+                "name": email,
+                "email": email,
             }
         },
     )
     response.raise_for_status()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     env = Env()
     env.read_env()
-    access_token = get_access_token(env.str('EP_CLIENT_ID'), env.str('EP_CLIENT_SECRET'))
-    print(add_product_to_cart(access_token, None, 'carttt'))
-    print(fetch_cart(access_token, 'carttt'))
+    access_token = get_access_token(
+        env.str("EP_CLIENT_ID"), env.str("EP_CLIENT_SECRET")
+    )
+    print(add_product_to_cart(access_token, None, "carttt"))
+    print(fetch_cart(access_token, "carttt"))
