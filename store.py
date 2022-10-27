@@ -138,6 +138,23 @@ def remove_product_to_cart(access_token, cart_id, product_id):
     return response.json()
 
 
+def create_customer(email, access_token):
+    response = requests.post(
+        f'{API_BASE_URL}/v2/customers',
+        headers={
+            'Authorization': f'Bearer {access_token}',
+        },
+        json={
+            'data': {
+                'type': 'customer',
+                'name': email,
+                'email': email,
+            }
+        },
+    )
+    response.raise_for_status()
+
+
 if __name__ == '__main__':
     env = Env()
     env.read_env()
