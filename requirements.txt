@@ -1,4 +1,6 @@
+black==22.10.0
 environs==9.5.*
+flake8==5.0.*
 python-telegram-bot==13.14
 redis==4.3.*
 requests==2.28.*
