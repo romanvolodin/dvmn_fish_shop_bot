@@ -1,3 +1,5 @@
+from time import time
+
 import redis
 from environs import Env
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -239,6 +241,13 @@ def handle_users_reply(update, context):
     }
     state_handler = states_functions[user_state]
     try:
+        token_expires = int(db.get("access_token_expires").decode("utf-8"))
+        if token_expires < time():
+            client_id = db.get("client_id").decode("utf-8")
+            client_secret = db.get("client_secret").decode("utf-8")
+            token = get_access_token(client_id, client_secret)
+            db.set("access_token", token["access_token"])
+            db.set("access_token_expires", token["expires"])
         next_state = state_handler(update, context)
         db.set(chat_id, next_state)
     except Exception as err:
@@ -257,9 +266,12 @@ if __name__ == "__main__":
     database_host = env.str("DATABASE_HOST")
     database_port = env.int("DATABASE_PORT")
     db = redis.Redis(host=database_host, port=database_port, password=database_password)
-    access_token = get_access_token(client_id, client_secret)
+    token = get_access_token(client_id, client_secret)
 
-    db.set("access_token", access_token)
+    db.set("access_token", token["access_token"])
+    db.set("access_token_expires", token["expires"])
+    db.set("client_id", client_id)
+    db.set("client_secret", client_secret)
     db.set("price_book_id", price_book_id)
 
     updater = Updater(telegram_token)

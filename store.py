@@ -14,7 +14,7 @@ def get_access_token(client_id, client_secret):
     }
     response = requests.post(f"{API_BASE_URL}/oauth/access_token", data=payload)
     response.raise_for_status()
-    return response.json()["access_token"]
+    return response.json()
 
 
 def fetch_products(access_token):
